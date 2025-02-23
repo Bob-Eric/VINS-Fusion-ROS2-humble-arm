@@ -83,7 +83,7 @@ MarginalizationInfo::~MarginalizationInfo()
     
     for (auto it = parameter_block_data.begin(); it != parameter_block_data.end(); ++it)
     {
-        delete it->second;
+        delete[] it->second;
         it->second = nullptr;
     }
     
@@ -95,7 +95,11 @@ MarginalizationInfo::~MarginalizationInfo()
         
         delete factors[i]->cost_function;
         factors[i]->cost_function = nullptr;
+        
+        // delete factors[i]->loss_function;
+        // factors[i]->loss_function = nullptr;
 
+        delete factors[i];
         factors[i] = nullptr;
     }
 }

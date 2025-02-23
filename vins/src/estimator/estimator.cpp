@@ -88,8 +88,6 @@ void Estimator::clearState()
         last_marginalization_info = nullptr;
     }
 
-    tmp_pre_integration = nullptr;
-    last_marginalization_info = nullptr;
     last_marginalization_parameter_blocks.clear();
 
     f_manager.clearState();
@@ -478,7 +476,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     ImageFrame imageframe(image, header);
     imageframe.pre_integration = tmp_pre_integration;
     all_image_frame.insert(make_pair(header, imageframe));
-    tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
+    tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};//FIXME: memory leak
 
     if(ESTIMATE_EXTRINSIC == 2)
     {
@@ -1167,11 +1165,8 @@ void Estimator::optimization()
     ceres::Solver::Options options;
 
     if (USE_GPU_CERES)
-        // std::cout << "1" << endl;
         options.dense_linear_algebra_library_type = ceres::CUDA;
-    else
-        // std::cout << "2" << endl;
-        options.linear_solver_type = ceres::DENSE_SCHUR;
+    options.linear_solver_type = ceres::DENSE_SCHUR;
 
     //options.num_threads = 2;
     options.trust_region_strategy_type = ceres::DOGLEG;
@@ -1271,7 +1266,7 @@ void Estimator::optimization()
                                                                           it_per_id.feature_per_frame[0].cur_td, it_per_frame.cur_td);
                             ResidualBlockInfo *residual_block_info = new ResidualBlockInfo(f, loss_function,
                                                                                            vector<double *>{para_Pose[imu_i], para_Pose[imu_j], para_Ex_Pose[0], para_Ex_Pose[1], para_Feature[feature_index], para_Td[0]},
-                                                                                           vector<int>{0, 4});
+                                                                                           vector<int>{0, 4}); 
                             marginalization_info->addResidualBlockInfo(residual_block_info);
                         }
                         else
@@ -1280,7 +1275,7 @@ void Estimator::optimization()
                                                                           it_per_id.feature_per_frame[0].cur_td, it_per_frame.cur_td);
                             ResidualBlockInfo *residual_block_info = new ResidualBlockInfo(f, loss_function,
                                                                                            vector<double *>{para_Ex_Pose[0], para_Ex_Pose[1], para_Feature[feature_index], para_Td[0]},
-                                                                                           vector<int>{2});
+                                                                                           vector<int>{2}); 
                             marginalization_info->addResidualBlockInfo(residual_block_info);
                         }
                     }
@@ -1445,6 +1440,13 @@ void Estimator::slideWindow()
             {
                 map<double, ImageFrame>::iterator it_0;
                 it_0 = all_image_frame.find(t_0);
+                
+                for ( auto iter_to_erase=all_image_frame.begin(); iter_to_erase != it_0;iter_to_erase++)
+                {
+                    delete iter_to_erase->second.pre_integration;
+                    iter_to_erase->second.pre_integration = nullptr;
+                }
+
                 delete it_0->second.pre_integration;
                 it_0->second.pre_integration = nullptr;
                 all_image_frame.erase(all_image_frame.begin(), it_0);

@@ -38,6 +38,7 @@ cd ceres-solver-2.1.0
 mkdir build && cd build
 cmake -DEXPORT_BUILD_DIR=ON \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         ../
 make -j $WORKERS_BUILD_DEPS
 make test -j $WORKERS_BUILD_DEPS
