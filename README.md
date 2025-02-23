@@ -8,7 +8,6 @@ It is now possibler to run VINS-Fusion on ROS2 Humble using ros2 launch or ros2 
 Code based in large part on [this repository](https://github.com/zinuok/VINS-Fusion-ROS2) by zinuok.
 
 
->TO BE DELETED (to make package smaller):
 >- GPU enable/disable features also have been added: refer [EuRoC config](https://github.com/zinuok/VINS-Fusion-ROS2/blob/main/config/euroc/euroc_stereo_imu_config.yaml#L19-L21) (refered from [here](https://github.com/pjrambo/VINS-Fusion-gpu) and [here](https://github.com/pjrambo/VINS-Fusion-gpu/issues/33#issuecomment-1097642597))
 >  - The GPU version has some CUDA library [dependencies: OpenCV with CUDA](https://github.com/zinuok/VINS-Fusion-ROS2/blob/main/vins/src/featureTracker/feature_tracker.h#L21-L23). Therefore, if it is a bothersome to you and only need the cpu version, please comment the following compiler macro at line 14 in the 'feature_tracker.h':
 >  ```cpp
@@ -19,19 +18,97 @@ Code based in large part on [this repository](https://github.com/zinuok/VINS-Fus
 - **System**
   - Ubuntu 20.04
   - ROS2 humble
+
 - **Libraries**
+
   - OpenCV & cv_bridge for ROS2 Humble
   - Ceres Solver-2.1.0
   - Eigen-3.3.9
 
+- **OpenCV CUDA**
 
-### Build
-1. Install dependencies by running the `install_external_deps.sh` script (OpenCV, Ceres, Eigen will be installed)
+  1. Download OpenCV and OpenCV Contrib source code at `OPENCV_CUDA_DIR`
+
+     ```bash
+     cd $OPENCV_CUDA_DIR
+     git clone https://github.com/opencv/opencv.git -b 4.11.0 --depth 1
+     git clone https://github.com/opencv/opencv_contrib.git -b 4.11.0 --depth 1
+     ```
+
+  2. Build
+
+     ```bash
+     cd opencv
+     mkdir build && cd build
+     cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+         -DCMAKE_INSTALL_PREFIX=/usr/local/ \
+         -DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+         -DWITH_CUDA=ON \
+         -DCUDA_ARCH_PTX="" \
+         -DENABLE_FAST_MATH=ON \
+         -DCUDA_FAST_MATH=ON \
+         -DWITH_CUBLAS=ON \
+         -DWITH_LIBV4L=ON \
+         -DWITH_GSTREAMER=ON \
+         -DWITH_GSTREAMER_0_10=OFF \
+         -DWITH_QT=ON \
+         -DWITH_OPENGL=ON \
+         -DCUDA_NVCC_FLAGS="--expt-relaxed-constexpr" \
+         -DWITH_TBB=ON \
+         ..
+     make -j18
+     ```
+
+  3. Export Library
+
+     ```bash
+     export LD_LIBRARY_PATH=$OPENCV_CUDA_DIR/build/lib:$LD_LIBRARY_PATH
+     ```
+
+
+- **Ceres**
+
+  1. Download Ceres 2.1 source code
+
+     ```bash
+     wget http://ceres-solver.org/ceres-solver-2.1.0.tar.gz
+     tar zxf ceres-solver-2.1.0.tar.gz
+     ```
+  
+  
+    2. Build
+  
+        ```bash
+        cd ceres-solver-2.1.0
+        mkdir build && cd build
+        cmake -DEXPORT_BUILD_DIR=ON \
+                -DCMAKE_INSTALL_PREFIX=/usr/local \
+                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                ..
+        make -j18
+        ```
+  
+  
+  3. Install
+  
+      ```bash
+      sudo make install
+      ```
+
+
+### Build Package
+1. Install dependencies by running the `install_external_deps.sh` script (OpenCV, Ceres, Eigen will be installed).
+
+   Or install them manually, and specify the `OpenCV_Dir` in `CMakeLists.txt`
+
+   ```cmake
+   set(OpenCV_Dir "$OPENCV_CUDA_DIR/build")
+   ```
 
 2. Build the package using colcon build
-```bash
-colcon build --symlink-install
-```
+    ```bash
+    colcon build --symlink-install
+    ```
 
 
 ### Playing EuRoC dataset bags
