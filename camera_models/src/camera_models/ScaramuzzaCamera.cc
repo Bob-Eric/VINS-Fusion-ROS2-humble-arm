@@ -80,11 +80,21 @@ OCAMCamera::Parameters::readFromYamlFile(const std::string& filename)
             return false;
         }
     }
+    m_resolutionMultiplier = fs["resolution_multiplier"];
+    m_resolutionMultiplier = (m_resolutionMultiplier == 0.0) ? 1.0 : m_resolutionMultiplier;
+    if (m_resolutionMultiplier!=1.0){
+        //TODO: Support resolution multiplier for scaramuzza model
+        throw std::string("Resolution multiplier is not supported for scaramuzza model");
+    }
+    if(m_resolutionMultiplier > 1.0)
+    {
+        throw std::runtime_error("Resolution multiplier must be less than or equal to 1.0");
+    }
 
     m_modelType = SCARAMUZZA;
     fs["camera_name"] >> m_cameraName;
-    m_imageWidth = static_cast<int>(fs["image_width"]);
-    m_imageHeight = static_cast<int>(fs["image_height"]);
+    m_imageWidth = static_cast<int>(fs["image_width"])*m_resolutionMultiplier;
+    m_imageHeight = static_cast<int>(fs["image_height"])*m_resolutionMultiplier;
 
     cv::FileNode n = fs["poly_parameters"];
     for(int i=0; i < SCARAMUZZA_POLY_SIZE; i++)
@@ -146,6 +156,7 @@ OCAMCamera::Parameters::operator=(const OCAMCamera::Parameters& other)
         m_cameraName = other.m_cameraName;
         m_imageWidth = other.m_imageWidth;
         m_imageHeight = other.m_imageHeight;
+        m_resolutionMultiplier = other.m_resolutionMultiplier;
         m_C = other.m_C;
         m_D = other.m_D;
         m_E = other.m_E;
@@ -222,6 +233,11 @@ int
 OCAMCamera::imageHeight(void) const
 {
     return mParameters.imageHeight();
+}
+
+double OCAMCamera::resolutionMultiplier(void) const
+{
+    return mParameters.resolutionMultiplier();
 }
 
 void

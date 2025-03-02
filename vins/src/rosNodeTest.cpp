@@ -69,6 +69,10 @@ cv::Mat getImageFromMsg(const sensor_msgs::msg::Image::ConstPtr &img_msg)
     cv::Mat img = ptr->image.clone();
     return img;
 }
+void resize_image(cv::Mat &image, double scale)
+{
+    cv::resize(image, image, cv::Size(0, 0), scale, scale, cv::INTER_AREA);
+}
 
 // extract images with same timestamp from two topics
 void sync_process()
@@ -101,9 +105,13 @@ void sync_process()
                 {
                     time = img0_buf.front()->header.stamp.sec + img0_buf.front()->header.stamp.nanosec * (1e-9);
                     header = img0_buf.front()->header;
+                    const double image0_res_multiplier = estimator.featureTracker.m_camera[0]->resolutionMultiplier();
+                    const double image1_res_multiplier = estimator.featureTracker.m_camera[1]->resolutionMultiplier();
                     image0 = getImageFromMsg(img0_buf.front());
+                    resize_image(image0, image0_res_multiplier);
                     img0_buf.pop();
                     image1 = getImageFromMsg(img1_buf.front());
+                    resize_image(image1, image1_res_multiplier);
                     img1_buf.pop();
                     //printf("find img0 and img1\n");
 
@@ -126,7 +134,9 @@ void sync_process()
             {
                 time = img0_buf.front()->header.stamp.sec + img0_buf.front()->header.stamp.nanosec * (1e-9);
                 header = img0_buf.front()->header;
+                const double image_res_multiplier = estimator.featureTracker.m_camera[0]->resolutionMultiplier();
                 image = getImageFromMsg(img0_buf.front());
+                resize_image(image, image_res_multiplier);
                 img0_buf.pop();
             }
             m_buf.unlock();

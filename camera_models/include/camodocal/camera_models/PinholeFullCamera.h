@@ -110,6 +110,8 @@ class PinholeFullCamera : public Camera
     const std::string& cameraName( void ) const;
     int imageWidth( void ) const;
     int imageHeight( void ) const;
+    double resolutionMultiplier(void) const override;
+
     cv::Size imageSize( ) const { return cv::Size( imageWidth( ), imageHeight( ) ); }
     cv::Point2f getPrinciple( ) const
     {

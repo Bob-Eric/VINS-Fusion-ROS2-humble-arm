@@ -177,11 +177,18 @@ CataCamera::Parameters::readFromYamlFile(const std::string& filename)
             return false;
         }
     }
+    m_resolutionMultiplier = fs["resolution_multiplier"];
+    m_resolutionMultiplier = (m_resolutionMultiplier == 0.0) ? 1.0 : m_resolutionMultiplier;
+    if(m_resolutionMultiplier > 1.0)
+    {
+        throw std::runtime_error("Resolution multiplier must be less than or equal to 1.0");
+    }
+
 
     m_modelType = MEI;
     fs["camera_name"] >> m_cameraName;
-    m_imageWidth = static_cast<int>(fs["image_width"]);
-    m_imageHeight = static_cast<int>(fs["image_height"]);
+    m_imageWidth = static_cast<int>(fs["image_width"])*m_resolutionMultiplier;
+    m_imageHeight = static_cast<int>(fs["image_height"])*m_resolutionMultiplier;
 
     cv::FileNode n = fs["mirror_parameters"];
     m_xi = static_cast<double>(n["xi"]);
@@ -193,10 +200,10 @@ CataCamera::Parameters::readFromYamlFile(const std::string& filename)
     m_p2 = static_cast<double>(n["p2"]);
 
     n = fs["projection_parameters"];
-    m_gamma1 = static_cast<double>(n["gamma1"]);
-    m_gamma2 = static_cast<double>(n["gamma2"]);
-    m_u0 = static_cast<double>(n["u0"]);
-    m_v0 = static_cast<double>(n["v0"]);
+    m_gamma1 = static_cast<double>(n["gamma1"])*m_resolutionMultiplier;
+    m_gamma2 = static_cast<double>(n["gamma2"])*m_resolutionMultiplier;
+    m_u0 = static_cast<double>(n["u0"])*m_resolutionMultiplier;
+    m_v0 = static_cast<double>(n["v0"])*m_resolutionMultiplier;
 
     return true;
 }
@@ -242,6 +249,7 @@ CataCamera::Parameters::operator=(const CataCamera::Parameters& other)
         m_cameraName = other.m_cameraName;
         m_imageWidth = other.m_imageWidth;
         m_imageHeight = other.m_imageHeight;
+        m_resolutionMultiplier = other.m_resolutionMultiplier;
         m_xi = other.m_xi;
         m_k1 = other.m_k1;
         m_k2 = other.m_k2;
@@ -367,6 +375,11 @@ int
 CataCamera::imageHeight(void) const
 {
     return mParameters.imageHeight();
+}
+
+double CataCamera::resolutionMultiplier(void) const
+{
+    return mParameters.resolutionMultiplier();
 }
 
 void

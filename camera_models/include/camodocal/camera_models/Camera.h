@@ -39,6 +39,7 @@ class Camera
         const std::string& cameraName( void ) const;
         int imageWidth( void ) const;
         int imageHeight( void ) const;
+        double resolutionMultiplier( void ) const;
 
         int nIntrinsics( void ) const;
 
@@ -51,7 +52,9 @@ class Camera
         std::string m_cameraName;
         int m_imageWidth;
         int m_imageHeight;
+        double m_resolutionMultiplier;
     };
+    virtual double resolutionMultiplier( void ) const = 0;
 
     virtual ModelType modelType( void ) const           = 0;
     virtual const std::string& cameraName( void ) const = 0;

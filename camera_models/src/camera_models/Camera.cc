@@ -101,6 +101,12 @@ Camera::Parameters::imageHeight(void) const
     return m_imageHeight;
 }
 
+double
+Camera::Parameters::resolutionMultiplier(void) const
+{
+    return m_resolutionMultiplier;
+}
+
 int
 Camera::Parameters::nIntrinsics(void) const
 {

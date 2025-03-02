@@ -162,21 +162,27 @@ EquidistantCamera::Parameters::readFromYamlFile(const std::string& filename)
             return false;
         }
     }
+    m_resolutionMultiplier = fs["resolution_multiplier"];
+    m_resolutionMultiplier = (m_resolutionMultiplier == 0.0) ? 1.0 : m_resolutionMultiplier;
+    if(m_resolutionMultiplier > 1.0)
+    {
+        throw std::runtime_error("Resolution multiplier must be less than or equal to 1.0");
+    }
 
     m_modelType = KANNALA_BRANDT;
     fs["camera_name"] >> m_cameraName;
-    m_imageWidth = static_cast<int>(fs["image_width"]);
-    m_imageHeight = static_cast<int>(fs["image_height"]);
+    m_imageWidth = static_cast<int>(fs["image_width"])*m_resolutionMultiplier;
+    m_imageHeight = static_cast<int>(fs["image_height"])*m_resolutionMultiplier;
 
     cv::FileNode n = fs["projection_parameters"];
-    m_k2 = static_cast<double>(n["k2"]);
-    m_k3 = static_cast<double>(n["k3"]);
-    m_k4 = static_cast<double>(n["k4"]);
-    m_k5 = static_cast<double>(n["k5"]);
-    m_mu = static_cast<double>(n["mu"]);
-    m_mv = static_cast<double>(n["mv"]);
-    m_u0 = static_cast<double>(n["u0"]);
-    m_v0 = static_cast<double>(n["v0"]);
+    m_k2 = static_cast<double>(n["k2"])*m_resolutionMultiplier;
+    m_k3 = static_cast<double>(n["k3"])*m_resolutionMultiplier;
+    m_k4 = static_cast<double>(n["k4"])*m_resolutionMultiplier;
+    m_k5 = static_cast<double>(n["k5"])*m_resolutionMultiplier;
+    m_mu = static_cast<double>(n["mu"])*m_resolutionMultiplier;
+    m_mv = static_cast<double>(n["mv"])*m_resolutionMultiplier;
+    m_u0 = static_cast<double>(n["u0"])*m_resolutionMultiplier;
+    m_v0 = static_cast<double>(n["v0"])*m_resolutionMultiplier;
 
     return true;
 }
@@ -214,6 +220,7 @@ EquidistantCamera::Parameters::operator=(const EquidistantCamera::Parameters& ot
         m_cameraName = other.m_cameraName;
         m_imageWidth = other.m_imageWidth;
         m_imageHeight = other.m_imageHeight;
+        m_resolutionMultiplier = other.m_resolutionMultiplier;
         m_k2 = other.m_k2;
         m_k3 = other.m_k3;
         m_k4 = other.m_k4;
@@ -306,6 +313,11 @@ int
 EquidistantCamera::imageHeight(void) const
 {
     return mParameters.imageHeight();
+}
+
+double EquidistantCamera::resolutionMultiplier(void) const
+{
+    return mParameters.resolutionMultiplier();
 }
 
 void

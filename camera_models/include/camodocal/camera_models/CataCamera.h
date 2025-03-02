@@ -84,6 +84,7 @@ public:
     const std::string& cameraName(void) const;
     int imageWidth(void) const;
     int imageHeight(void) const;
+    double resolutionMultiplier(void) const override;
 
     void estimateIntrinsics(const cv::Size& boardSize,
                             const std::vector< std::vector<cv::Point3f> >& objectPoints,

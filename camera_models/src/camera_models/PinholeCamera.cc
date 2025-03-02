@@ -161,11 +161,17 @@ PinholeCamera::Parameters::readFromYamlFile(const std::string& filename)
             return false;
         }
     }
+    m_resolutionMultiplier = fs["resolution_multiplier"];
+    m_resolutionMultiplier = (m_resolutionMultiplier == 0.0) ? 1.0 : m_resolutionMultiplier;
+    if(m_resolutionMultiplier > 1.0)
+    {
+        throw std::runtime_error("Resolution multiplier must be less than or equal to 1.0");
+    }
 
     m_modelType = PINHOLE;
     fs["camera_name"] >> m_cameraName;
-    m_imageWidth = static_cast<int>(fs["image_width"]);
-    m_imageHeight = static_cast<int>(fs["image_height"]);
+    m_imageWidth = static_cast<int>(fs["image_width"])*m_resolutionMultiplier;
+    m_imageHeight = static_cast<int>(fs["image_height"])*m_resolutionMultiplier;
 
     cv::FileNode n = fs["distortion_parameters"];
     m_k1 = static_cast<double>(n["k1"]);
@@ -174,10 +180,10 @@ PinholeCamera::Parameters::readFromYamlFile(const std::string& filename)
     m_p2 = static_cast<double>(n["p2"]);
 
     n = fs["projection_parameters"];
-    m_fx = static_cast<double>(n["fx"]);
-    m_fy = static_cast<double>(n["fy"]);
-    m_cx = static_cast<double>(n["cx"]);
-    m_cy = static_cast<double>(n["cy"]);
+    m_fx = static_cast<double>(n["fx"])*m_resolutionMultiplier;
+    m_fy = static_cast<double>(n["fy"])*m_resolutionMultiplier;
+    m_cx = static_cast<double>(n["cx"])*m_resolutionMultiplier;
+    m_cy = static_cast<double>(n["cy"])*m_resolutionMultiplier;
 
     return true;
 }
@@ -219,6 +225,7 @@ PinholeCamera::Parameters::operator=(const PinholeCamera::Parameters& other)
         m_cameraName = other.m_cameraName;
         m_imageWidth = other.m_imageWidth;
         m_imageHeight = other.m_imageHeight;
+        m_resolutionMultiplier = other.m_resolutionMultiplier;
         m_k1 = other.m_k1;
         m_k2 = other.m_k2;
         m_p1 = other.m_p1;
@@ -339,6 +346,10 @@ int
 PinholeCamera::imageHeight(void) const
 {
     return mParameters.imageHeight();
+}
+double PinholeCamera::resolutionMultiplier(void) const
+{
+    return mParameters.resolutionMultiplier();
 }
 
 void

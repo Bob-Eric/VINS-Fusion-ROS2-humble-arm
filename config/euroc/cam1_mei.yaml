@@ -16,3 +16,4 @@ projection_parameters:
    gamma2: 8.3140606765916948e+02
    u0: 3.7432007355249738e+02
    v0: 2.5422391621480082e+02
+resolution_multiplier: 1.0
