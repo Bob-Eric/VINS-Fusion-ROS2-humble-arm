@@ -14,3 +14,4 @@ projection_parameters:
    fy: 797.22631836
    cx: 615.95568848
    cy: 343.50363159
+resolution_multiplier: 0.5
