@@ -70,6 +70,18 @@ T readParam(rclcpp::Node::SharedPtr n, std::string name)
 
 void readParameters(std::string config_file)
 {
+    if (config_file[0]=='~')
+    {
+        char* home = getenv("HOME");
+        std::string path(home);
+        config_file = path + config_file.substr(1, config_file.length()-1);
+    }
+    else if(config_file[0] != '/')
+    {
+        char* home = getenv("PWD");
+        std::string path(home);
+        config_file = path + "/" + config_file;
+    }
     FILE *fh = fopen(config_file.c_str(),"r");
     if(fh == NULL){
         ROS_WARN("config_file dosen't exist; wrong config_file path");

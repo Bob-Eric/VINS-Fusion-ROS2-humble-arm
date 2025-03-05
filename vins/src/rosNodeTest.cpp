@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 	auto n = rclcpp::Node::make_shared("vins_estimator");
     // ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
-    if(argc != 2)
+    if(argc < 2)
     {
         printf("please intput: rosrun vins vins_node [config file] \n"
                "for example: rosrun vins vins_node "
