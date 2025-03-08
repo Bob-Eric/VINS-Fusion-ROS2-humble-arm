@@ -4,6 +4,7 @@ project(camera_models)
 
 set(CMAKE_CXX_STANDARD 14)
 add_compile_options(-Wextra -Wpedantic)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 # find dependencies

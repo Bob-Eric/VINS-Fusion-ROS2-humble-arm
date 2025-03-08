@@ -3,7 +3,7 @@ project(vins)
 
 set(CMAKE_CXX_STANDARD 14)
 add_compile_options(-Wextra)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)

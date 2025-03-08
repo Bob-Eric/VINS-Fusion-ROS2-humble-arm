@@ -4,6 +4,7 @@ project(loop_fusion)
 set(CMAKE_CXX_STANDARD 14)
 add_compile_options( -Wextra -Wpedantic) # -Wall : print warning
 set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
