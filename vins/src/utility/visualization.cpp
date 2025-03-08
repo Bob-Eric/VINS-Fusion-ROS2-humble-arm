@@ -8,6 +8,12 @@
  *******************************************************/
 
 #include "visualization.h"
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/imgcodecs.hpp>
+#include <rclcpp/qos.hpp>
+#include <sensor_msgs/msg/detail/compressed_image__struct.hpp>
+#include <vector>
 
 // using namespace ros;
 using namespace Eigen;
@@ -24,6 +30,7 @@ rclcpp::Publisher<sensor_msgs::msg::PointCloud>::SharedPtr pub_keyframe_point;
 rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_extrinsic;
 
 rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr pub_image_track;
+rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr pub_image_track_compressed;
 
 CameraPoseVisualization cameraposevisual(1, 0, 0, 1);
 static double sum_of_path = 0;
@@ -32,18 +39,19 @@ static Vector3d last_path(0.0, 0.0, 0.0);
 size_t pub_counter = 0;
 
 void registerPub(rclcpp::Node::SharedPtr n) {
-    pub_latest_odometry = n->create_publisher<nav_msgs::msg::Odometry>("imu_propagate", 1000);
-    pub_path = n->create_publisher<nav_msgs::msg::Path>("path", 1000);
-    pub_odometry = n->create_publisher<nav_msgs::msg::Odometry>("odometry", 1000);
-    pub_point_cloud = n->create_publisher<sensor_msgs::msg::PointCloud>("point_cloud", 1000);
-    pub_margin_cloud = n->create_publisher<sensor_msgs::msg::PointCloud>("margin_cloud", 1000);
-    pub_key_poses = n->create_publisher<visualization_msgs::msg::Marker>("key_poses", 1000);
-    pub_camera_pose = n->create_publisher<nav_msgs::msg::Odometry>("camera_pose", 1000);
-    pub_camera_pose_visual = n->create_publisher<visualization_msgs::msg::MarkerArray>("camera_pose_visual", 1000);
-    pub_keyframe_pose = n->create_publisher<nav_msgs::msg::Odometry>("keyframe_pose", 1000);
-    pub_keyframe_point = n->create_publisher<sensor_msgs::msg::PointCloud>("keyframe_point", 1000);
-    pub_extrinsic = n->create_publisher<nav_msgs::msg::Odometry>("extrinsic", 1000);
-    pub_image_track = n->create_publisher<sensor_msgs::msg::Image>("image_track", 1000);
+    pub_latest_odometry = n->create_publisher<nav_msgs::msg::Odometry>("imu_propagate", 10);
+    pub_path = n->create_publisher<nav_msgs::msg::Path>("path", 10);
+    pub_odometry = n->create_publisher<nav_msgs::msg::Odometry>("odometry", 10);
+    pub_point_cloud = n->create_publisher<sensor_msgs::msg::PointCloud>("point_cloud", 10);
+    pub_margin_cloud = n->create_publisher<sensor_msgs::msg::PointCloud>("margin_cloud", 10);
+    pub_key_poses = n->create_publisher<visualization_msgs::msg::Marker>("key_poses", 10);
+    pub_camera_pose = n->create_publisher<nav_msgs::msg::Odometry>("camera_pose", 10);
+    pub_camera_pose_visual = n->create_publisher<visualization_msgs::msg::MarkerArray>("camera_pose_visual", 10);
+    pub_keyframe_pose = n->create_publisher<nav_msgs::msg::Odometry>("keyframe_pose", 10);
+    pub_keyframe_point = n->create_publisher<sensor_msgs::msg::PointCloud>("keyframe_point", 10);
+    pub_extrinsic = n->create_publisher<nav_msgs::msg::Odometry>("extrinsic", 10);
+    pub_image_track = n->create_publisher<sensor_msgs::msg::Image>("image_track", 10);
+    pub_image_track_compressed = n->create_publisher<sensor_msgs::msg::CompressedImage>("image_track/compressed", 10);
 
     cameraposevisual.setScale(0.1);
     cameraposevisual.setLineWidth(0.01);
@@ -81,7 +89,17 @@ void pubTrackImage(const cv::Mat &imgTrack, const double t) {
     header.stamp.nanosec = nsec_ts;
 
     // sensor_msgs::msg::ImagePtr
-    sensor_msgs::msg::Image::SharedPtr imgTrackMsg = cv_bridge::CvImage(header, "bgr8", imgTrack).toImageMsg();
+    std::vector<uchar> buf;
+    std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY, 25};
+    cv::imencode(".jpg", imgTrack, buf, params);
+
+    sensor_msgs::msg::CompressedImage imgTrackCompressedMsg;
+    imgTrackCompressedMsg.header = header;
+    imgTrackCompressedMsg.format = "jpg";
+    imgTrackCompressedMsg.data = buf;
+    pub_image_track_compressed->publish(imgTrackCompressedMsg);
+
+    auto imgTrackMsg = cv_bridge::CvImage(header, "bgr8", imgTrack).toImageMsg();
     pub_image_track->publish(*imgTrackMsg);
 }
 
